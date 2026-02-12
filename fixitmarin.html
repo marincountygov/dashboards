@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>FixItMarin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style > :root
+    {
+      --blue: #1c75bc;
+      --bg: #f5f7fa;
+      --card: #fff;
+      --border: rgba(0, 0, 0, .1);
+    }
+    body {
+      margin: 0;
+      font-family: "Public Sans"
+      , sans-serif;
+      background: var(--bg);
+    }
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px 60px;
+    }
+    h1 {
+      font-family: "Jost"
+      , sans-serif;
+      font-weight: 700;
+      margin: 0;
+    }
+    .subtle {
+      color: #5b616b;
+      margin-top: 8px;
+    }
+    h2 {
+      font-family: "Jost"
+      , sans-serif;
+      margin-top: 40px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 10px;
+    }
+    canvas {
+      width: 100% !important;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media(min-width: 900px) {
+      .grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+
+    <h1>FixItMarin Dashboard</h1>
+    <p class="subtle">Marin County non-emergency issue reports.</p>
+
+    <h2>Reports by Topic</h2>
+    <div class="card">
+      <canvas id="topicBar"></canvas>
+    </div>
+
+    <h2>Open vs Closed by Topic</h2>
+    <div class="card">
+      <canvas id="openClosed"></canvas>
+    </div>
+
+    <h2>Reports per Month</h2>
+    <div class="card">
+      <canvas id="monthlyLine"></canvas>
+    </div>
+
+    <h2>Average Days to Close by Topic</h2>
+    <div class="card">
+      <canvas id="avgClose"></canvas>
+    </div>
+
+    <h2>Distribution Snapshots</h2>
+    <div class="grid two">
+      <div class="card">
+        <canvas id="deptDonut"></canvas>
+      </div>
+      <div class="card">
+        <canvas id="top5Donut"></canvas>
+      </div>
+    </div>
+
+    <h2>Geographic Insights (Top Cities from Location)</h2>
+    <div class="card">
+      <canvas id="cityBar"></canvas>
+    </div>
+
+    <h2>Total Requests Over Time</h2>
+    <div class="card">
+      <canvas id="cumulativeLine"></canvas>
+    </div>
+
+  </main>
+
+  <script>
+    const BLUE="#1c75bc";
+
+    function monthLabel(str){
+    const d=new Date(str+"-01");
+    return d.toLocaleString("default",{month:"long",year:"numeric"});
+    }
+
+    const DATA={
+    topicLabels:["General Waste","Pothole","Other Issue","Illegal Dumping","Missing/Damaged Street Sign","Fallen Branches/Trees","Question","Flooded Roadway","Other Park Issue","Maintenance Issue","Active Non-Permitted Construction","Tires"],
+    topicTotals:[48,40,23,19,19,9,9,7,4,3,2,1],
+    closed:[35,33,13,15,15,7,5,6,4,2,2,0],
+    open:[13,7,10,4,4,2,4,1,0,1,0,1],
+    months:["2025-09","2025-10","2025-11","2025-12","2026-01"],
+    monthCounts:[2,34,45,48,48],
+    cumulative:[2,36,81,129,177],
+    avgLabels:["Flooded Roadway","Fallen Branches/Trees","Missing/Damaged Street Sign","General Waste","Pothole","Illegal Dumping","Question","Other Park Issue","Other Issue","Maintenance Issue","Active Non-Permitted Construction"],
+    avgValues:[14.3,10.7,7.0,6.3,5.3,5.1,4.5,4.4,3.8,3.4,2.6],
+    deptLabels:["Roads","Waste Management","Parks","Code Enforcement"],
+    deptValues:[94,81,7,2],
+    top5Labels:["General Waste","Pothole","Other Issue","Illegal Dumping","Missing/Damaged Street Sign","Other"],
+    top5Values:[48,40,23,19,19,35],
+    cityLabels:["San Rafael","Unincorporated","Forest Knolls","Novato","Mill Valley","Bolinas","San Anselmo","Greenbrae","Nicasio","Corte Madera"],
+    cityValues:[56,52,17,15,12,10,8,5,4,3]
+    };
+
+    Chart.defaults.font.family='"Public Sans",sans-serif';
+
+    /* Topic Bar */
+    new Chart(topicBar,{
+    type:"bar",
+    data:{labels:DATA.topicLabels,datasets:[{data:DATA.topicTotals,backgroundColor:BLUE}]},
+    options:{plugins:{legend:{display:false}}}
+    });
+
+    /* Open vs Closed */
+    new Chart(openClosed,{
+    type:"bar",
+    data:{labels:DATA.topicLabels,
+    datasets:[
+    {label:"Closed",data:DATA.closed,backgroundColor:BLUE},
+    {label:"Open",data:DATA.open,backgroundColor:"rgba(28,117,188,.5)"}
+    ]},
+    options:{scales:{x:{stacked:true},y:{stacked:true}}}
+    });
+
+    /* Monthly */
+    new Chart(monthlyLine,{
+    type:"line",
+    data:{labels:DATA.months.map(monthLabel),
+    datasets:[{data:DATA.monthCounts,borderColor:BLUE,fill:false}]},
+    options:{plugins:{legend:{display:false}}}
+    });
+
+    /* Avg Close */
+    new Chart(avgClose,{
+    type:"bar",
+    data:{labels:DATA.avgLabels,datasets:[{data:DATA.avgValues,backgroundColor:BLUE}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}}}
+    });
+
+    /* Donut blue variations */
+    const BLUE_VARIANTS=[
+    "rgba(28,117,188,1)",
+    "rgba(28,117,188,.85)",
+    "rgba(28,117,188,.7)",
+    "rgba(28,117,188,.55)",
+    "rgba(28,117,188,.4)",
+    "rgba(28,117,188,.25)"
+    ];
+
+    new Chart(deptDonut,{
+    type:"doughnut",
+    data:{labels:DATA.deptLabels,
+    datasets:[{data:DATA.deptValues,backgroundColor:BLUE_VARIANTS}]},
+    options:{cutout:"60%"}
+    });
+
+    new Chart(top5Donut,{
+    type:"doughnut",
+    data:{labels:DATA.top5Labels,
+    datasets:[{data:DATA.top5Values,backgroundColor:BLUE_VARIANTS}]},
+    options:{cutout:"60%"}
+    });
+
+    /* City Bar */
+    new Chart(cityBar,{
+    type:"bar",
+    data:{labels:DATA.cityLabels,
+    datasets:[{data:DATA.cityValues,backgroundColor:BLUE}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}}}
+    });
+
+    /* Cumulative */
+    new Chart(cumulativeLine,{
+    type:"line",
+    data:{labels:DATA.months.map(monthLabel),
+    datasets:[{data:DATA.cumulative,borderColor:BLUE,fill:false}]},
+    options:{plugins:{legend:{display:false}}}
+    });
+
+  </script>
+</body></html>
